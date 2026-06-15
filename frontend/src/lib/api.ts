@@ -1,4 +1,6 @@
-const API_BASE = '/api/v1';
+const API_BASE = typeof window !== 'undefined'
+  ? `${window.location.protocol}//${window.location.hostname}:8082/api/v1`
+  : 'http://backend:8082/api/v1';
 
 function getTokens() {
   if (typeof window === 'undefined') return { access: null, refresh: null };

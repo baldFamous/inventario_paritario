@@ -10,6 +10,9 @@ export default function ProductosPage() {
   const [productos, setProductos] = useState<Producto[]>([]);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [search, setSearch] = useState('');
+  const [filterCodigo, setFilterCodigo] = useState('');
+  const [filterNombre, setFilterNombre] = useState('');
+  const [filterCategoria, setFilterCategoria] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({ categoria: '', codigo: '', nombre: '', unidad_medida: '', stock_minimo: '0' });
 
@@ -33,6 +36,12 @@ export default function ProductosPage() {
     load();
   };
 
+  const filteredProductos = productos.filter(p => {
+    return p.codigo.toLowerCase().includes(filterCodigo.toLowerCase()) &&
+      p.nombre.toLowerCase().includes(filterNombre.toLowerCase()) &&
+      p.categoria_nombre.toLowerCase().includes(filterCategoria.toLowerCase());
+  });
+
   return (
     <AppShell title="Productos">
       <div className="page-header">
@@ -41,20 +50,33 @@ export default function ProductosPage() {
           <button className="btn btn-primary" onClick={() => setShowModal(true)}>+ Nuevo Producto</button>
         )}
       </div>
-      <div className="toolbar">
-        <input className="form-input" placeholder="Buscar por código o nombre..."
-          value={search} onChange={e => setSearch(e.target.value)} />
-      </div>
       <div className="card">
         <div className="table-wrapper">
           <table>
             <thead>
-              <tr><th>Código</th><th>Nombre</th><th>Categoría</th><th>Unidad</th><th>Disponible</th><th>Reservado</th><th>Mínimo</th></tr>
+              <tr>
+                <th>
+                  Código
+                  <input className="form-input" style={{ marginTop: '4px', padding: '4px', fontSize: '0.8rem', width: '10rem' }} placeholder="Filtrar..." value={filterCodigo} onChange={e => setFilterCodigo(e.target.value)} />
+                </th>
+                <th>
+                  Nombre
+                  <input className="form-input" style={{ marginTop: '4px', padding: '4px', fontSize: '0.8rem', width: '10rem' }} placeholder="Filtrar..." value={filterNombre} onChange={e => setFilterNombre(e.target.value)} />
+                </th>
+                <th>
+                  Categoría
+                  <select className="form-select" style={{ marginTop: '4px', padding: '4px', fontSize: '0.8rem', width: '10rem' }} value={filterCategoria} onChange={e => setFilterCategoria(e.target.value)}>
+                    <option value="">Todas</option>
+                    {categorias.map(c => <option key={c.id} value={c.nombre}>{c.nombre}</option>)}
+                  </select>
+                </th>
+                <th>Unidad</th><th>Disponible</th><th>Reservado</th><th>Mínimo</th>
+              </tr>
             </thead>
             <tbody>
-              {productos.length === 0 ? (
+              {filteredProductos.length === 0 ? (
                 <tr><td colSpan={7} className="table-empty">No hay productos</td></tr>
-              ) : productos.map(p => (
+              ) : filteredProductos.map(p => (
                 <tr key={p.id}>
                   <td><strong>{p.codigo}</strong></td>
                   <td>{p.nombre}</td>
