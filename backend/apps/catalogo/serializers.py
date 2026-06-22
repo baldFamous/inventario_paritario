@@ -20,11 +20,11 @@ class ProductoSerializer(serializers.ModelSerializer):
         model = Producto
         fields = ['id', 'categoria', 'categoria_nombre', 'codigo', 'nombre',
                   'descripcion', 'unidad_medida', 'stock_minimo', 'is_active',
-                  'stock_disponible', 'stock_reservado']
+                  'stock_disponible', 'stock_reservado', 'asignado_a']
 
 
 class ProductoCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Producto
         fields = ['categoria', 'codigo', 'nombre', 'descripcion',
-                  'unidad_medida', 'stock_minimo']
+                  'unidad_medida', 'stock_minimo', 'asignado_a']

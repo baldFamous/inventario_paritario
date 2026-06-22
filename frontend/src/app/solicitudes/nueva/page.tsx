@@ -58,7 +58,7 @@ export default function NuevaSolicitudPage() {
   };
 
   const filtered = productos.filter(p =>
-    p.nombre.toLowerCase().includes(search.toLowerCase()) || p.codigo.toLowerCase().includes(search.toLowerCase())
+    !p.asignado_a && (p.nombre.toLowerCase().includes(search.toLowerCase()) || p.codigo.toLowerCase().includes(search.toLowerCase()))
   );
 
   return (

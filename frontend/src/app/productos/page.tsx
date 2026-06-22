@@ -15,6 +15,8 @@ export default function ProductosPage() {
   const [filterCategoria, setFilterCategoria] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({ categoria: '', codigo: '', nombre: '', unidad_medida: '', stock_minimo: '0' });
+  const [editAsignacion, setEditAsignacion] = useState<number | null>(null);
+  const [asignacionValue, setAsignacionValue] = useState('');
 
   const load = () => {
     apiFetch<PaginatedResponse<Producto>>(`/productos/?search=${search}&page_size=100`).then(r => setProductos(r.results));
@@ -33,6 +35,15 @@ export default function ProductosPage() {
     });
     setShowModal(false);
     setForm({ categoria: '', codigo: '', nombre: '', unidad_medida: '', stock_minimo: '0' });
+    load();
+  };
+
+  const handleUpdateAsignacion = async (id: number) => {
+    await apiFetch(`/productos/${id}/`, {
+      method: 'PATCH',
+      body: JSON.stringify({ asignado_a: asignacionValue || null }),
+    });
+    setEditAsignacion(null);
     load();
   };
 
@@ -70,12 +81,13 @@ export default function ProductosPage() {
                     {categorias.map(c => <option key={c.id} value={c.nombre}>{c.nombre}</option>)}
                   </select>
                 </th>
-                <th>Unidad</th><th>Disponible</th><th>Reservado</th><th>Mínimo</th>
+                <th>Unidad</th><th>Disponible</th><th>Reservado</th><th>Mínimo</th><th>Asignado A</th>
+                {user?.rol === 'GESTOR' && <th>Acciones</th>}
               </tr>
             </thead>
             <tbody>
               {filteredProductos.length === 0 ? (
-                <tr><td colSpan={7} className="table-empty">No hay productos</td></tr>
+                <tr><td colSpan={user?.rol === 'GESTOR' ? 9 : 8} className="table-empty">No hay productos</td></tr>
               ) : filteredProductos.map(p => (
                 <tr key={p.id}>
                   <td><strong>{p.codigo}</strong></td>
@@ -87,6 +99,31 @@ export default function ProductosPage() {
                   </td>
                   <td>{p.stock_reservado}</td>
                   <td>{p.stock_minimo}</td>
+                  <td>
+                    {editAsignacion === p.id ? (
+                      <input 
+                        className="form-input" 
+                        placeholder="Ej: Gimnasio, Juan..."
+                        value={asignacionValue} 
+                        onChange={e => setAsignacionValue(e.target.value)} 
+                        autoFocus
+                      />
+                    ) : (
+                      p.asignado_a ? <span className="badge badge-info">{p.asignado_a}</span> : <span className="text-muted">Sin asignar</span>
+                    )}
+                  </td>
+                  {user?.rol === 'GESTOR' && (
+                    <td>
+                      {editAsignacion === p.id ? (
+                        <div className="flex gap-2" style={{ display: 'flex', gap: '8px' }}>
+                          <button className="btn btn-sm btn-primary" onClick={() => handleUpdateAsignacion(p.id)}>Guardar</button>
+                          <button className="btn btn-sm btn-secondary" onClick={() => setEditAsignacion(null)}>Cancelar</button>
+                        </div>
+                      ) : (
+                        <button className="btn btn-sm btn-secondary" onClick={() => { setEditAsignacion(p.id); setAsignacionValue(p.asignado_a || ''); }}>Editar</button>
+                      )}
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>

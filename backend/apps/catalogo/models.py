@@ -33,6 +33,10 @@ class Producto(models.Model):
         default=0, help_text='Umbral para alerta de stock crítico'
     )
     is_active = models.BooleanField(default=True)
+    asignado_a = models.CharField(
+        max_length=200, blank=True, null=True,
+        help_text='Área o persona a la que está asignado este producto. Si está asignado, no se muestra en nueva solicitud.'
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

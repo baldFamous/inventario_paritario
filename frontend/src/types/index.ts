@@ -30,6 +30,7 @@ export interface Producto {
   is_active: boolean;
   stock_disponible: number;
   stock_reservado: number;
+  asignado_a?: string | null;
 }
 
 export interface Lote {
