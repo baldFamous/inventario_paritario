@@ -1,5 +1,6 @@
 from rest_framework import viewsets, mixins, status
 from rest_framework.decorators import action
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from apps.catalogo.models import Producto
@@ -11,6 +12,7 @@ from .services import InventarioService
 
 class LoteViewSet(viewsets.ModelViewSet):
     permission_classes = [IsGestor]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
     filterset_fields = ['producto', 'estado']
     search_fields = ['orden_compra', 'producto__nombre']
     ordering_fields = ['fecha_ingreso', 'fecha_caducidad', 'cantidad_disponible']
@@ -39,6 +41,7 @@ class LoteViewSet(viewsets.ModelViewSet):
             fecha_ingreso=data['fecha_ingreso'],
             fecha_caducidad=data.get('fecha_caducidad'),
             ejecutado_por=request.user,
+            archivo_adjunto=data.get('archivo_adjunto')
         )
         return Response(LoteSerializer(lote).data, status=status.HTTP_201_CREATED)
 

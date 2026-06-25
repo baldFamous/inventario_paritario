@@ -48,3 +48,23 @@ class Producto(models.Model):
 
     def __str__(self):
         return f'{self.codigo} - {self.nombre}'
+
+
+class AsignacionProducto(models.Model):
+    """
+    Registro individual de asignación de un producto del catálogo a una persona.
+    """
+    producto = models.ForeignKey(Producto, on_delete=models.CASCADE, related_name='asignaciones_individuales')
+    asignado_a = models.CharField(max_length=200, help_text='Nombre de la persona o área a la que se le asigna el producto')
+    cantidad = models.PositiveIntegerField(default=1)
+    fecha = models.DateField(auto_now_add=True)
+    observaciones = models.TextField(blank=True)
+
+    class Meta:
+        db_table = 'asignaciones_producto'
+        verbose_name = 'Asignación de Producto'
+        verbose_name_plural = 'Asignaciones de Producto'
+        ordering = ['-fecha']
+
+    def __str__(self):
+        return f'{self.cantidad} x {self.producto.nombre} asignado a {self.asignado_a}'

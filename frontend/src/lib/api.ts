@@ -47,6 +47,9 @@ export async function apiFetch<T = unknown>(
     'Content-Type': 'application/json',
     ...(options.headers as Record<string, string> || {}),
   };
+  if (options.body instanceof FormData) {
+    delete headers['Content-Type'];
+  }
   if (access) headers['Authorization'] = `Bearer ${access}`;
 
   let res = await fetch(`${API_BASE}${endpoint}`, { ...options, headers });
