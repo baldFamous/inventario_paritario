@@ -11,6 +11,7 @@ export default function LotesPage() {
   const [showNew, setShowNew] = useState(false);
   const [showBaja, setShowBaja] = useState<Lote | null>(null);
   const [form, setForm] = useState({ producto: '', orden_compra: '', costo_unitario: '', cantidad: '', fecha_ingreso: '', fecha_caducidad: '' });
+  const [archivoAdjunto, setArchivoAdjunto] = useState<File | null>(null);
   const [bajaForm, setBajaForm] = useState({ cantidad: '', motivo: '' });
 
   const load = () => {
@@ -25,19 +26,23 @@ export default function LotesPage() {
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
+    const formData = new FormData();
+    formData.append('producto', form.producto);
+    formData.append('orden_compra', form.orden_compra);
+    formData.append('costo_unitario', form.costo_unitario);
+    formData.append('cantidad', form.cantidad);
+    formData.append('fecha_ingreso', form.fecha_ingreso);
+    if (form.fecha_caducidad) formData.append('fecha_caducidad', form.fecha_caducidad);
+    if (archivoAdjunto) formData.append('archivo_adjunto', archivoAdjunto);
+
     await apiFetch('/lotes/', {
       method: 'POST',
-      body: JSON.stringify({
-        producto: parseInt(form.producto),
-        orden_compra: form.orden_compra,
-        costo_unitario: form.costo_unitario,
-        cantidad: parseInt(form.cantidad),
-        fecha_ingreso: form.fecha_ingreso,
-        fecha_caducidad: form.fecha_caducidad || null,
-      }),
+      body: formData as any,
     });
+    
     setShowNew(false);
     setForm({ producto: '', orden_compra: '', costo_unitario: '', cantidad: '', fecha_ingreso: '', fecha_caducidad: '' });
+    setArchivoAdjunto(null);
     load();
   };
 
@@ -71,7 +76,7 @@ export default function LotesPage() {
         <div className="table-wrapper">
           <table>
             <thead>
-              <tr><th>#</th><th>Producto</th><th>OC</th><th>Inicial</th><th>Disponible</th><th>Reservado</th><th>Costo Ud.</th><th>Vencimiento</th><th>Estado</th><th></th></tr>
+              <tr><th>#</th><th>Producto</th><th>OC</th><th>Inicial</th><th>Disponible</th><th>Reservado</th><th>Costo Ud.</th><th>Vencimiento</th><th>Adjunto</th><th>Estado</th><th></th></tr>
             </thead>
             <tbody>
               {lotes.length === 0 ? (
@@ -86,6 +91,13 @@ export default function LotesPage() {
                   <td>{l.cantidad_reservada}</td>
                   <td>${Number(l.costo_unitario).toLocaleString('es-CL')}</td>
                   <td>{l.fecha_caducidad || '—'}</td>
+                  <td>
+                    {l.archivo_adjunto ? (
+                      <a href={l.archivo_adjunto} target="_blank" rel="noreferrer" className="text-primary" title="Descargar adjunto">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                      </a>
+                    ) : '—'}
+                  </td>
                   <td><span className={`badge badge-${l.estado.toLowerCase()}`}>{l.estado}</span></td>
                   <td>
                     {l.estado === 'ACTIVO' && l.cantidad_disponible > 0 && (
@@ -121,6 +133,10 @@ export default function LotesPage() {
                   <div className="form-group"><label className="form-label">Fecha Ingreso</label><input className="form-input" type="date" required value={form.fecha_ingreso} onChange={e => setForm({ ...form, fecha_ingreso: e.target.value })} /></div>
                 </div>
                 <div className="form-group"><label className="form-label">Fecha Caducidad (opcional)</label><input className="form-input" type="date" value={form.fecha_caducidad} onChange={e => setForm({ ...form, fecha_caducidad: e.target.value })} /></div>
+                <div className="form-group">
+                  <label className="form-label">Archivo Adjunto (opcional, PDF/ZIP)</label>
+                  <input className="form-input" type="file" accept=".pdf,.zip,.rar" onChange={e => setArchivoAdjunto(e.target.files?.[0] || null)} />
+                </div>
               </div>
               <div className="modal-footer"><button className="btn btn-secondary" type="button" onClick={() => setShowNew(false)}>Cancelar</button><button className="btn btn-primary" type="submit">Registrar</button></div>
             </form>

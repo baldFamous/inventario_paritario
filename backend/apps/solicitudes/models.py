@@ -19,7 +19,11 @@ class Solicitud(models.Model):
 
     solicitante = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.PROTECT,
-        related_name='solicitudes_creadas',
+        related_name='solicitudes_creadas', null=True, blank=True,
+    )
+    solicitante_nombre = models.CharField(
+        max_length=200, blank=True, 
+        help_text='Nombre del solicitante cuando no tiene usuario en el sistema'
     )
     gestor = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.PROTECT,

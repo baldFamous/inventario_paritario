@@ -13,7 +13,7 @@ class SolicitudService:
 
     @staticmethod
     @transaction.atomic
-    def crear_solicitud(solicitante, observaciones, items):
+    def crear_solicitud(observaciones, items, solicitante=None, solicitante_nombre=''):
         """
         Crea una solicitud en estado PENDIENTE con sus líneas de detalle.
         items: lista de dicts con {producto_id, cantidad_solicitada}
@@ -25,6 +25,7 @@ class SolicitudService:
 
         solicitud = Solicitud.objects.create(
             solicitante=solicitante,
+            solicitante_nombre=solicitante_nombre,
             observaciones=observaciones,
             estado=Solicitud.Estado.PENDIENTE,
         )

@@ -12,7 +12,7 @@ class InventarioService:
     @staticmethod
     @transaction.atomic
     def registrar_lote(producto, orden_compra, costo_unitario, cantidad,
-                       fecha_ingreso, fecha_caducidad, ejecutado_por):
+                       fecha_ingreso, fecha_caducidad, ejecutado_por, archivo_adjunto=None):
         """
         Crea un nuevo lote y registra el movimiento de INGRESO.
         Returns: (Lote, Movimiento)
@@ -26,6 +26,7 @@ class InventarioService:
             cantidad_reservada=0,
             fecha_ingreso=fecha_ingreso,
             fecha_caducidad=fecha_caducidad,
+            archivo_adjunto=archivo_adjunto,
             estado=Lote.Estado.ACTIVO,
         )
 

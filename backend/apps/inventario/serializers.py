@@ -12,7 +12,7 @@ class LoteSerializer(serializers.ModelSerializer):
         fields = ['id', 'producto', 'producto_nombre', 'producto_codigo',
                   'orden_compra', 'costo_unitario', 'costo_total',
                   'cantidad_inicial', 'cantidad_disponible', 'cantidad_reservada',
-                  'fecha_ingreso', 'fecha_caducidad', 'estado', 'created_at']
+                  'fecha_ingreso', 'fecha_caducidad', 'archivo_adjunto', 'estado', 'created_at']
         read_only_fields = ['id', 'cantidad_disponible', 'cantidad_reservada',
                             'estado', 'created_at']
 
@@ -24,6 +24,7 @@ class LoteCreateSerializer(serializers.Serializer):
     cantidad = serializers.IntegerField(min_value=1)
     fecha_ingreso = serializers.DateField()
     fecha_caducidad = serializers.DateField(required=False, allow_null=True)
+    archivo_adjunto = serializers.FileField(required=False, allow_null=True)
 
 
 class BajaSerializer(serializers.Serializer):
@@ -32,9 +33,7 @@ class BajaSerializer(serializers.Serializer):
 
 
 class MovimientoSerializer(serializers.ModelSerializer):
-    ejecutado_por_nombre = serializers.CharField(
-        source='ejecutado_por.get_full_name', read_only=True
-    )
+    ejecutado_por_nombre = serializers.SerializerMethodField()
     lote_info = serializers.CharField(source='lote.__str__', read_only=True)
     tipo_display = serializers.CharField(source='get_tipo_display', read_only=True)
 
@@ -43,3 +42,7 @@ class MovimientoSerializer(serializers.ModelSerializer):
         fields = ['id', 'lote', 'lote_info', 'solicitud', 'ejecutado_por',
                   'ejecutado_por_nombre', 'tipo', 'tipo_display', 'cantidad',
                   'stock_anterior', 'stock_posterior', 'motivo', 'created_at']
+
+    def get_ejecutado_por_nombre(self, obj):
+        name = obj.ejecutado_por.get_full_name()
+        return name if name else obj.ejecutado_por.username

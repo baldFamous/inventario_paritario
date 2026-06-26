@@ -1,8 +1,8 @@
 from rest_framework import viewsets
 from django.db.models import Sum, Q, Count
 from core.permissions import IsGestorOrReadOnly
-from .models import Categoria, Producto
-from .serializers import CategoriaSerializer, ProductoSerializer, ProductoCreateSerializer
+from .models import Categoria, Producto, AsignacionProducto
+from .serializers import CategoriaSerializer, ProductoSerializer, ProductoCreateSerializer, AsignacionProductoSerializer
 
 
 class CategoriaViewSet(viewsets.ModelViewSet):
@@ -29,7 +29,13 @@ class ProductoViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         lotes_activos = Q(lotes__estado='ACTIVO')
-        return Producto.objects.select_related('categoria').annotate(
+        return Producto.objects.select_related('categoria').prefetch_related('asignaciones_individuales').annotate(
             stock_disponible=Sum('lotes__cantidad_disponible', filter=lotes_activos, default=0),
             stock_reservado=Sum('lotes__cantidad_reservada', filter=lotes_activos, default=0),
         )
+
+class AsignacionProductoViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsGestorOrReadOnly]
+    serializer_class = AsignacionProductoSerializer
+    queryset = AsignacionProducto.objects.all()
+    filterset_fields = ['producto']

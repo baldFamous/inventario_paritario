@@ -30,7 +30,8 @@ class SolicitudViewSet(viewsets.ReadOnlyModelViewSet):
 
     def get_permissions(self):
         if self.action == 'crear':
-            return [IsSolicitante()]
+            from rest_framework.permissions import AllowAny
+            return [AllowAny()]
         if self.action in ('aprobar', 'rechazar', 'despachar'):
             return [IsGestor()]
         if self.action == 'cancelar':
@@ -43,7 +44,8 @@ class SolicitudViewSet(viewsets.ReadOnlyModelViewSet):
         serializer.is_valid(raise_exception=True)
         try:
             solicitud = SolicitudService.crear_solicitud(
-                solicitante=request.user,
+                solicitante=request.user if request.user.is_authenticated else None,
+                solicitante_nombre=serializer.validated_data.get('solicitante_nombre', ''),
                 observaciones=serializer.validated_data.get('observaciones', ''),
                 items=serializer.validated_data['items'],
             )
