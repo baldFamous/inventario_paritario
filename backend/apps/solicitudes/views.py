@@ -43,9 +43,15 @@ class SolicitudViewSet(viewsets.ReadOnlyModelViewSet):
         serializer = CrearSolicitudSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         try:
+            solicitante_nombre = serializer.validated_data.get('solicitante_nombre', '')
+            
+            # El solicitante (usuario del sistema) ya no se auto-asignará, 
+            # forzando a que se respete siempre el solicitante_nombre.
+            solicitante = None
+
             solicitud = SolicitudService.crear_solicitud(
-                solicitante=request.user if request.user.is_authenticated else None,
-                solicitante_nombre=serializer.validated_data.get('solicitante_nombre', ''),
+                solicitante=solicitante,
+                solicitante_nombre=solicitante_nombre,
                 observaciones=serializer.validated_data.get('observaciones', ''),
                 items=serializer.validated_data['items'],
             )

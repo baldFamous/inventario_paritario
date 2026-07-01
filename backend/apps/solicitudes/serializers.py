@@ -29,9 +29,11 @@ class SolicitudSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'solicitante', 'gestor', 'estado', 'created_at', 'updated_at']
 
     def get_solicitante_nombre(self, obj):
+        if obj.solicitante_nombre:
+            return obj.solicitante_nombre
         if obj.solicitante:
-            return obj.solicitante.get_full_name()
-        return obj.solicitante_nombre
+            return obj.solicitante.get_full_name() or obj.solicitante.username
+        return ''
 
 
 # --- Serializers de entrada para acciones ---
