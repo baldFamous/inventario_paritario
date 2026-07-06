@@ -1,4 +1,6 @@
-const API_BASE = '/api/v1';
+const API_BASE = typeof window !== 'undefined'
+  ? `${window.location.protocol}//${window.location.hostname}:8082/api/v1`
+  : 'http://backend:8082/api/v1';
 
 function getTokens() {
   if (typeof window === 'undefined') return { access: null, refresh: null };
@@ -45,6 +47,9 @@ export async function apiFetch<T = unknown>(
     'Content-Type': 'application/json',
     ...(options.headers as Record<string, string> || {}),
   };
+  if (options.body instanceof FormData) {
+    delete headers['Content-Type'];
+  }
   if (access) headers['Authorization'] = `Bearer ${access}`;
 
   let res = await fetch(`${API_BASE}${endpoint}`, { ...options, headers });

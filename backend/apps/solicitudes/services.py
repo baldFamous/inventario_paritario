@@ -13,7 +13,7 @@ class SolicitudService:
 
     @staticmethod
     @transaction.atomic
-    def crear_solicitud(solicitante, observaciones, items):
+    def crear_solicitud(observaciones, items, solicitante=None, solicitante_nombre=''):
         """
         Crea una solicitud en estado PENDIENTE con sus líneas de detalle.
         items: lista de dicts con {producto_id, cantidad_solicitada}
@@ -25,6 +25,7 @@ class SolicitudService:
 
         solicitud = Solicitud.objects.create(
             solicitante=solicitante,
+            solicitante_nombre=solicitante_nombre,
             observaciones=observaciones,
             estado=Solicitud.Estado.PENDIENTE,
         )
@@ -135,6 +136,7 @@ class SolicitudService:
     def despachar_solicitud(solicitud_id, gestor):
         """
         Confirma despacho físico. Convierte stock reservado en despachado.
+        Crea registro en AsignacionProducto para tener historial múltiple.
         Returns: Solicitud
         """
         solicitud = Solicitud.objects.select_for_update().get(pk=solicitud_id)
@@ -144,12 +146,21 @@ class SolicitudService:
                 f'No se puede despachar una solicitud en estado {solicitud.estado}.'
             )
 
-        detalles = solicitud.detalles.select_related('lote').filter(
+        detalles = solicitud.detalles.select_related('lote', 'producto').filter(
             lote__isnull=False, cantidad_aprobada__isnull=False
         )
 
         if not detalles.exists():
             raise ValidationError('No hay detalles con lotes asignados para despachar.')
+
+        from apps.catalogo.models import AsignacionProducto
+        
+        # Determinar nombre del solicitante
+        nombre_solicitante = solicitud.solicitante_nombre
+        if not nombre_solicitante and solicitud.solicitante:
+            nombre_solicitante = solicitud.solicitante.get_full_name() or solicitud.solicitante.username
+        if not nombre_solicitante:
+            nombre_solicitante = "Desconocido"
 
         for detalle in detalles:
             InventarioService.despachar_stock(
@@ -157,6 +168,14 @@ class SolicitudService:
                 cantidad=detalle.cantidad_aprobada,
                 solicitud=solicitud,
                 ejecutado_por=gestor,
+            )
+            
+            # Crear historial de asignación individual
+            AsignacionProducto.objects.create(
+                producto=detalle.producto,
+                asignado_a=nombre_solicitante,
+                cantidad=detalle.cantidad_aprobada,
+                observaciones=f"Despacho automático - Solicitud #{solicitud.id}"
             )
 
         solicitud.estado = Solicitud.Estado.DESPACHADA

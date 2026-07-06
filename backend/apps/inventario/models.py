@@ -28,6 +28,7 @@ class Lote(models.Model):
     cantidad_reservada = models.PositiveIntegerField(default=0)
     fecha_ingreso = models.DateField()
     fecha_caducidad = models.DateField(null=True, blank=True)
+    archivo_adjunto = models.FileField(upload_to='lotes/', null=True, blank=True, help_text='Archivo adjunto (PDF/ZIP) del ingreso')
     estado = models.CharField(max_length=10, choices=Estado.choices, default=Estado.ACTIVO)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

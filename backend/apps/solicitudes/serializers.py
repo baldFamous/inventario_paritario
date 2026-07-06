@@ -17,7 +17,7 @@ class DetalleSolicitudSerializer(serializers.ModelSerializer):
 
 class SolicitudSerializer(serializers.ModelSerializer):
     detalles = DetalleSolicitudSerializer(many=True, read_only=True)
-    solicitante_nombre = serializers.CharField(source='solicitante.get_full_name', read_only=True)
+    solicitante_nombre = serializers.SerializerMethodField()
     gestor_nombre = serializers.CharField(source='gestor.get_full_name', read_only=True, default=None)
     estado_display = serializers.CharField(source='get_estado_display', read_only=True)
 
@@ -28,6 +28,13 @@ class SolicitudSerializer(serializers.ModelSerializer):
                   'detalles', 'created_at', 'updated_at']
         read_only_fields = ['id', 'solicitante', 'gestor', 'estado', 'created_at', 'updated_at']
 
+    def get_solicitante_nombre(self, obj):
+        if obj.solicitante_nombre:
+            return obj.solicitante_nombre
+        if obj.solicitante:
+            return obj.solicitante.get_full_name() or obj.solicitante.username
+        return ''
+
 
 # --- Serializers de entrada para acciones ---
 
@@ -37,6 +44,7 @@ class ItemSolicitudInput(serializers.Serializer):
 
 
 class CrearSolicitudSerializer(serializers.Serializer):
+    solicitante_nombre = serializers.CharField(required=False, default='', allow_blank=True)
     observaciones = serializers.CharField(required=False, default='', allow_blank=True)
     items = ItemSolicitudInput(many=True, min_length=1)
 

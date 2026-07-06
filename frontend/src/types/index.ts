@@ -30,6 +30,17 @@ export interface Producto {
   is_active: boolean;
   stock_disponible: number;
   stock_reservado: number;
+  asignado_a?: string | null;
+  asignaciones_individuales?: AsignacionProducto[];
+}
+
+export interface AsignacionProducto {
+  id: number;
+  producto: number;
+  asignado_a: string;
+  cantidad: number;
+  fecha: string;
+  observaciones: string;
 }
 
 export interface Lote {
@@ -45,6 +56,7 @@ export interface Lote {
   cantidad_reservada: number;
   fecha_ingreso: string;
   fecha_caducidad: string | null;
+  archivo_adjunto: string | null;
   estado: 'ACTIVO' | 'AGOTADO' | 'VENCIDO' | 'BAJA';
   created_at: string;
 }
