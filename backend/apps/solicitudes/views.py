@@ -52,6 +52,7 @@ class SolicitudViewSet(viewsets.ReadOnlyModelViewSet):
             solicitud = SolicitudService.crear_solicitud(
                 solicitante=solicitante,
                 solicitante_nombre=solicitante_nombre,
+                correo_respaldo=serializer.validated_data.get('correo_respaldo', ''),
                 observaciones=serializer.validated_data.get('observaciones', ''),
                 items=serializer.validated_data['items'],
             )

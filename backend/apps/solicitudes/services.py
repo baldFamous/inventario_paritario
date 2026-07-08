@@ -13,7 +13,7 @@ class SolicitudService:
 
     @staticmethod
     @transaction.atomic
-    def crear_solicitud(observaciones, items, solicitante=None, solicitante_nombre=''):
+    def crear_solicitud(observaciones, items, solicitante=None, solicitante_nombre='', correo_respaldo=''):
         """
         Crea una solicitud en estado PENDIENTE con sus líneas de detalle.
         items: lista de dicts con {producto_id, cantidad_solicitada}
@@ -26,16 +26,64 @@ class SolicitudService:
         solicitud = Solicitud.objects.create(
             solicitante=solicitante,
             solicitante_nombre=solicitante_nombre,
+            correo_respaldo=correo_respaldo,
             observaciones=observaciones,
             estado=Solicitud.Estado.PENDIENTE,
         )
 
+        detalles_creados = []
         for item in items:
-            DetalleSolicitud.objects.create(
+            detalle = DetalleSolicitud.objects.create(
                 solicitud=solicitud,
                 producto_id=item['producto_id'],
                 cantidad_solicitada=item['cantidad_solicitada'],
             )
+            detalles_creados.append(detalle)
+
+        # Enviar correo de notificación
+        try:
+            from django.core.mail import EmailMessage
+            from django.conf import settings
+            
+            subject = f"Nueva Solicitud de Insumos / Equipos #{solicitud.id}"
+            message = f"Se ha registrado una nueva solicitud en el sistema.\n\n"
+            message += f"Solicitante: {solicitante_nombre}\n"
+            if observaciones:
+                message += f"Observaciones: {observaciones}\n"
+            message += "\nDetalle de los insumos solicitados:\n"
+            
+            for detalle in detalles_creados:
+                # detalle.producto es la instancia gracias a la ForeignKey
+                message += f"- {detalle.producto.nombre}: {detalle.cantidad_solicitada} unidades\n"
+            
+            message += "\nPor favor ingrese al sistema para revisar y gestionar esta solicitud."
+
+            # TODO (PRODUCCION): Usar recipient_list real. Ej: ['francisco.valenzuela@mineduc.cl'] o un grupo.
+            recipient_list = ['bastian.rodriguez@mineduc.cl']
+            
+            email = EmailMessage(
+                subject=subject,
+                body=message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                to=recipient_list,
+            )
+            
+            # TODO (PRODUCCION): Enviar copia de respaldo al usuario.
+            # cc_list = []
+            # if correo_respaldo:
+            #     cc_list.append(correo_respaldo)
+            # elif solicitante and solicitante.email:
+            #     cc_list.append(solicitante.email)
+            # if cc_list:
+            #     email.cc = cc_list
+            
+            # Por ahora, solo mandamos copia de respaldo a bastian para pruebas
+            email.cc = ['bastian.rodriguez@mineduc.cl']
+                
+            email.send(fail_silently=True)
+        except Exception as e:
+            # Si el envío de correo falla, no queremos revertir la creación de la solicitud
+            pass
 
         return solicitud
 
@@ -84,6 +132,47 @@ class SolicitudService:
         solicitud.estado = Solicitud.Estado.APROBADA
         solicitud.gestor = gestor
         solicitud.save()
+
+        # Enviar correo de notificación de aprobación
+        try:
+            from django.core.mail import EmailMessage
+            from django.conf import settings
+            
+            subject = f"Aprobación de Solicitud #{solicitud.id}"
+            message = f"Su solicitud #{solicitud.id} ha sido APROBADA.\n\n"
+            message += f"El insumo será despachado próximamente por la unidad de adquisiciones y/o informática.\n\n"
+            message += "Detalles de la aprobación:\n"
+            
+            for asig in asignaciones:
+                detalle = DetalleSolicitud.objects.select_related('producto').get(
+                    pk=asig['detalle_id'], solicitud=solicitud
+                )
+                message += f"- {detalle.producto.nombre}: {asig['cantidad_aprobada']} unidades asignadas\n"
+            
+            message += "\nSaludos cordiales."
+
+            # TODO (PRODUCCION): El "to" debería ser el correo_respaldo del usuario o su email de cuenta
+            # to_email = solicitud.correo_respaldo or (solicitud.solicitante.email if solicitud.solicitante else None)
+            
+            # TODO (PRODUCCION): El "cc" debería ser el email del gestor
+            # cc_email = gestor.email
+
+            # Por ahora forzamos todo a bastian.rodriguez@mineduc.cl para pruebas
+            to_email = 'bastian.rodriguez@mineduc.cl'
+            cc_email = 'bastian.rodriguez@mineduc.cl'
+            
+            if to_email:
+                email = EmailMessage(
+                    subject=subject,
+                    body=message,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    to=[to_email],
+                    cc=[cc_email] if cc_email else []
+                )
+                email.send(fail_silently=True)
+        except Exception as e:
+            pass
+
         return solicitud
 
     @staticmethod

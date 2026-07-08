@@ -16,6 +16,7 @@ export default function PublicRequestForm() {
   const [productos, setProductos] = useState<Producto[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [nombre, setNombre] = useState('');
+  const [correoRespaldo, setCorreoRespaldo] = useState('');
   const [observaciones, setObservaciones] = useState('');
   const [search, setSearch] = useState('');
   const [sending, setSending] = useState(false);
@@ -51,6 +52,7 @@ export default function PublicRequestForm() {
         method: 'POST',
         body: JSON.stringify({
           solicitante_nombre: nombre,
+          correo_respaldo: correoRespaldo,
           observaciones,
           items: cart.map(c => ({ producto_id: c.producto_id, cantidad_solicitada: c.cantidad_solicitada })),
         }),
@@ -58,6 +60,7 @@ export default function PublicRequestForm() {
       setSuccess(true);
       setCart([]);
       setNombre('');
+      setCorreoRespaldo('');
       setObservaciones('');
     } catch (err: unknown) {
       alert(err instanceof Error ? err.message : 'Error al crear solicitud');
@@ -156,6 +159,10 @@ export default function PublicRequestForm() {
                 <div className="form-group">
                   <label className="form-label">Tu Nombre Completo *</label>
                   <input className="form-input" required value={nombre} onChange={e => setNombre(e.target.value)} placeholder="Ej: Juan Pérez" />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Correo para respaldo (opcional)</label>
+                  <input className="form-input" type="email" value={correoRespaldo} onChange={e => setCorreoRespaldo(e.target.value)} placeholder="Ej: juan.perez@mineduc.cl" />
                 </div>
                 <div className="form-group">
                   <label className="form-label">Observaciones (opcional)</label>

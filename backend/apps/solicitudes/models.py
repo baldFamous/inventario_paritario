@@ -25,6 +25,10 @@ class Solicitud(models.Model):
         max_length=200, blank=True, 
         help_text='Nombre del solicitante cuando no tiene usuario en el sistema'
     )
+    correo_respaldo = models.EmailField(
+        blank=True,
+        help_text='Correo electrónico para notificaciones (si no tiene usuario en el sistema)'
+    )
     gestor = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.PROTECT,
         related_name='solicitudes_gestionadas', null=True, blank=True,

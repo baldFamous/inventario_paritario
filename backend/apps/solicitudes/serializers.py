@@ -23,7 +23,7 @@ class SolicitudSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Solicitud
-        fields = ['id', 'solicitante', 'solicitante_nombre', 'gestor', 'gestor_nombre',
+        fields = ['id', 'solicitante', 'solicitante_nombre', 'correo_respaldo', 'gestor', 'gestor_nombre',
                   'estado', 'estado_display', 'motivo_rechazo', 'observaciones',
                   'detalles', 'created_at', 'updated_at']
         read_only_fields = ['id', 'solicitante', 'gestor', 'estado', 'created_at', 'updated_at']
@@ -45,6 +45,7 @@ class ItemSolicitudInput(serializers.Serializer):
 
 class CrearSolicitudSerializer(serializers.Serializer):
     solicitante_nombre = serializers.CharField(required=False, default='', allow_blank=True)
+    correo_respaldo = serializers.EmailField(required=False, default='', allow_blank=True)
     observaciones = serializers.CharField(required=False, default='', allow_blank=True)
     items = ItemSolicitudInput(many=True, min_length=1)
 
