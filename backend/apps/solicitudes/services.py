@@ -196,6 +196,39 @@ class SolicitudService:
         solicitud.gestor = gestor
         solicitud.motivo_rechazo = motivo_rechazo
         solicitud.save()
+
+        # Enviar correo de notificación de rechazo
+        try:
+            from django.core.mail import EmailMessage
+            from django.conf import settings
+            
+            subject = f"Rechazo de Solicitud #{solicitud.id}"
+            message = f"Su solicitud #{solicitud.id} ha sido RECHAZADA.\n\n"
+            message += f"Motivo del rechazo: {motivo_rechazo}\n\n"
+            message += "Saludos cordiales."
+
+            # TODO (PRODUCCION): El "to" debería ser el correo_respaldo del usuario o su email de cuenta
+            # to_email = solicitud.correo_respaldo or (solicitud.solicitante.email if solicitud.solicitante else None)
+            
+            # TODO (PRODUCCION): El "cc" debería ser el email del gestor
+            # cc_email = gestor.email
+
+            # Por ahora forzamos todo a bastian.rodriguez@mineduc.cl para pruebas
+            to_email = 'bastian.rodriguez@mineduc.cl'
+            cc_email = 'bastian.rodriguez@mineduc.cl'
+            
+            if to_email:
+                email = EmailMessage(
+                    subject=subject,
+                    body=message,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    to=[to_email],
+                    cc=[cc_email] if cc_email else []
+                )
+                email.send(fail_silently=True)
+        except Exception as e:
+            pass
+
         return solicitud
 
     @staticmethod
