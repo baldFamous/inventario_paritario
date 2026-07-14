@@ -12,6 +12,7 @@ export default function SolicitudesPage() {
   const [selected, setSelected] = useState<Solicitud | null>(null);
   const [action, setAction] = useState<string>('');
   const [motivo, setMotivo] = useState('');
+  const [viewingDetalle, setViewingDetalle] = useState<Solicitud | null>(null);
   const [lotes, setLotes] = useState<Lote[]>([]);
   const [asignaciones, setAsignaciones] = useState<Record<number, { lote_id: string; cantidad: string }>>({});
 
@@ -89,6 +90,7 @@ export default function SolicitudesPage() {
                     {user?.rol === 'SOLICITANTE' && s.estado === 'PENDIENTE' && (
                       <button className="btn btn-sm btn-secondary" onClick={() => handleCancelar(s.id)}>Cancelar</button>
                     )}
+                    <button className="btn btn-sm btn-secondary" onClick={() => setViewingDetalle(s)}>Ver Detalles</button>
                   </td>
                 </tr>
               ))}
@@ -148,6 +150,54 @@ export default function SolicitudesPage() {
               <ul style={{ marginTop: 12 }}>{selected.detalles.map(d => <li key={d.id}>{d.producto_nombre} — {d.cantidad_aprobada} uds</li>)}</ul>
             </div>
             <div className="modal-footer"><button className="btn btn-secondary" onClick={() => setSelected(null)}>Cancelar</button><button className="btn btn-success" onClick={handleDespachar}>Confirmar Despacho</button></div>
+          </div>
+        </div>
+      )}
+
+      {viewingDetalle && (
+        <div className="modal-overlay" onClick={() => setViewingDetalle(null)}>
+          <div className="modal" style={{ maxWidth: 640 }} onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Detalles de Solicitud #{viewingDetalle.id}</h3>
+              <button className="modal-close" onClick={() => setViewingDetalle(null)}>×</button>
+            </div>
+            <div className="modal-body">
+              <p style={{ marginBottom: 16 }}>
+                <strong>Estado:</strong> <span className={`badge badge-${viewingDetalle.estado.toLowerCase()}`}>{viewingDetalle.estado_display}</span>
+                <br />
+                {viewingDetalle.gestor_nombre && (
+                  <span style={{ color: '#555', marginTop: 8, display: 'inline-block' }}>
+                    <strong>Gestionado/Despachado por:</strong> {viewingDetalle.gestor_nombre}
+                  </span>
+                )}
+                {viewingDetalle.motivo_rechazo && (
+                  <>
+                    <br />
+                    <span style={{ color: '#e74c3c', marginTop: 8, display: 'inline-block' }}>
+                      <strong>Motivo de Rechazo:</strong> {viewingDetalle.motivo_rechazo}
+                    </span>
+                  </>
+                )}
+              </p>
+              <div style={{ background: '#FAFAFA', borderRadius: 6, padding: 12 }}>
+                <h4 style={{ marginBottom: 12 }}>Productos Solicitados</h4>
+                <ul style={{ paddingLeft: 20 }}>
+                  {viewingDetalle.detalles.map(d => (
+                    <li key={d.id} style={{ marginBottom: 8 }}>
+                      <strong>{d.producto_nombre}</strong> <br />
+                      <span style={{ fontSize: '0.9em', color: '#666' }}>
+                        Solicitado: {d.cantidad_solicitada} 
+                        {d.cantidad_aprobada !== null && ` | Aprobado/Despachado: ${d.cantidad_aprobada}`}
+                        {d.lote_orden_compra && ` | Lote OC: ${d.lote_orden_compra}`}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn btn-secondary" onClick={() => setViewingDetalle(null)}>Cerrar</button>
+            </div>
           </div>
         </div>
       )}
